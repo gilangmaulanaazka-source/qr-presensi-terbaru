@@ -1,0 +1,17 @@
+{
+  "name": "FEB Days 2026 — Fusion | Presensi FEB UNSIQ",
+  "short_name": "FEB Days 2026",
+  "description": "Presensi lokal FEB Days 2026 — Fusion: Bridging Ideas Building Unity.",
+  "start_url": "./#peserta",
+  "display": "standalone",
+  "background_color": "#f3f3f5",
+  "theme_color": "#242424",
+  "icons": [
+    {
+      "src": "assets/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

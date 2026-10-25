@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#242424">
+  <meta name="description" content="Aplikasi QR dan presensi lokal FEB Days 2026 tanpa backend.">
+  <title>FEB Days 2026 — Presensi Lokal</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="assets/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" defer></script>
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js" defer></script>
+  <script src="config.js" defer></script>
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="#peserta">
+      <span class="brand-logo-wrap"><img src="assets/logo-feb.png" alt="Logo FEB UNSIQ"></span>
+      <span class="brand-copy"><strong>FEB Days 2026</strong><small>FEB UNSIQ · Presensi Digital</small></span>
+    </a>
+    <button id="installButton" class="button ghost compact hidden" type="button">Pasang aplikasi</button>
+  </header>
+
+  <main>
+    <section class="view active" data-view="peserta">
+      <div class="hero">
+        <div class="event-hero-copy"><span class="eyebrow">Kartu peserta digital · FEB UNSIQ</span><h1>FEB Days <span class="year-accent">2026</span></h1><div class="fusion-tagline" aria-label="Fusion: Bridging Ideas Building Unity"><span class="fusion-label">Fusion:</span><span class="fusion-description">Bridging Ideas Building Unity</span></div><p>Buat QR Code peserta dengan mengisi data mahasiswa. QR dapat dipindai panitia tanpa database online.</p></div>
+        <div class="hero-badge"><span>Dirancang untuk HP</span><strong>Presensi lokal tanpa server</strong><small>Kehadiran tersimpan di perangkat panitia</small></div>
+      </div>
+      <div class="grid two">
+        <section class="panel">
+          <div class="panel-heading"><div><span class="step">01</span><h2>Data mahasiswa</h2></div><p>Data akan dimasukkan ke QR.</p></div>
+          <form id="participantForm" novalidate>
+            <div class="field"><label for="name">Nama lengkap *</label><input id="name" maxlength="80" required autocomplete="name" placeholder="Contoh: Ahmad Fulan"><small data-error-for="name"></small></div>
+            <div class="field"><label for="nim">NIM *</label><input id="nim" maxlength="20" required inputmode="numeric" autocomplete="off" placeholder="Contoh: 202301001"><small data-error-for="nim"></small></div>
+            <div class="field"><label for="prodi">Program studi *</label><select id="prodi" required><option value="">Pilih program studi</option></select><small data-error-for="prodi"></small></div>
+            <div class="field"><label for="semester">Semester *</label><select id="semester" required><option value="">Pilih semester</option></select><small data-error-for="semester"></small></div>
+            <label class="check-row"><input id="consent" type="checkbox"><span>Saya memastikan data yang dimasukkan sudah benar.</span></label>
+            <button class="button primary full" type="submit">Buat QR Code Peserta</button>
+          </form>
+        </section>
+        <aside class="panel info-panel">
+          <span class="step">Alur</span><h2>Tidak memerlukan database awal</h2>
+          <ol class="timeline">
+            <li><span>1</span><div><strong>Mahasiswa membuat QR</strong><p>Nama, NIM, prodi, dan semester dikemas ke QR.</p></div></li>
+            <li><span>2</span><div><strong>Panitia melakukan scan</strong><p>Data dibaca langsung dari QR.</p></div></li>
+            <li><span>3</span><div><strong>Browser menyimpan kehadiran</strong><p>Data masuk ke perangkat panitia.</p></div></li>
+            <li><span>4</span><div><strong>Ekspor spreadsheet</strong><p>Unduh Excel, CSV, atau backup JSON.</p></div></li>
+          </ol>
+          <div class="note"><strong>Privasi</strong><p>Karena tanpa server, QR memuat data peserta. Gunakan untuk kebutuhan internal acara.</p></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="view" data-view="kartu">
+      <div class="section-header"><div><span class="eyebrow">Kartu peserta</span><h1>QR Code berhasil dibuat.</h1><p>Simpan dan tunjukkan kepada panitia.</p></div><button id="newParticipantButton" class="button ghost">Buat kartu lain</button></div>
+      <div class="ticket-layout">
+        <article class="participant-card">
+          <div class="ticket-top"><div class="ticket-event-identity"><span class="ticket-label">Kartu Peserta Digital · FEB UNSIQ</span><h2>FEB Days 2026</h2><p class="ticket-tagline">Fusion: Bridging Ideas Building Unity</p><p id="cardDate">23–29 November 2026</p></div><div class="ticket-logo"><img src="assets/logo-feb.png" alt="Logo FEB UNSIQ"></div></div>
+          <div class="ticket-body"><div class="participant-data"><small>Nama peserta</small><strong id="cardName">-</strong><div class="ticket-meta"><div><small>NIM</small><strong id="cardNim">-</strong></div><div><small>Program studi</small><strong id="cardProdi">-</strong></div><div><small>Semester</small><strong id="cardSemester">-</strong></div></div></div><div class="qr-wrap"><div id="participantQr"></div><code id="participantToken">-</code></div></div>
+          <div class="ticket-bottom"><span>FEB UNSIQ • Tunjukkan QR ini kepada panitia.</span><strong>VALID</strong></div>
+        </article>
+        <aside class="panel ticket-actions"><h2>Simpan kartu</h2><p>Ambil tangkapan layar atau unduh QR.</p><button id="downloadQrButton" class="button primary full">Unduh QR Code</button><button id="copyPayloadButton" class="button secondary full">Salin kode peserta</button><div class="note"><strong>Tidak dikirim ke server</strong><p>Data hanya digunakan untuk membuat QR di perangkat ini.</p></div></aside>
+      </div>
+    </section>
+
+    <section class="view" data-view="scanner">
+      <div class="section-header"><div><span class="eyebrow">Mode panitia</span><h1>Scan dan catat kehadiran.</h1><p>Hasil scan tersimpan di browser perangkat panitia.</p></div><div class="status-pill">Penyimpanan lokal aktif</div></div>
+      <div class="grid scanner-grid">
+        <section class="panel">
+          <div id="scannerGate"><h2>Masukkan PIN panitia</h2><p>PIN hanya membatasi antarmuka pada perangkat ini.</p><div class="inline-field"><input id="scannerPin" type="password" inputmode="numeric" placeholder="PIN panitia"><button id="unlockScannerButton" class="button primary">Buka scanner</button></div></div>
+          <div id="scannerArea" class="hidden"><div id="reader" class="reader"></div><div class="scanner-controls"><button id="startScannerButton" class="button primary">Mulai kamera</button><button id="stopScannerButton" class="button ghost" disabled>Hentikan kamera</button></div></div>
+        </section>
+        <aside class="panel result-panel"><div id="scanPlaceholder" class="result-placeholder"><div class="scan-icon">⌁</div><h2>Belum ada QR dipindai</h2><p>Data mahasiswa akan muncul di sini.</p></div><div id="scanResult" class="scan-result hidden"><span id="scanBadge" class="result-badge">Berhasil</span><h2 id="scanName">Nama Peserta</h2><dl><div><dt>NIM</dt><dd id="scanNim">-</dd></div><div><dt>Program studi</dt><dd id="scanProdi">-</dd></div><div><dt>Semester</dt><dd id="scanSemester">-</dd></div><div><dt>Waktu</dt><dd id="scanTime">-</dd></div></dl><p id="scanMessage"></p></div></aside>
+      </div>
+      <section class="panel manual-panel"><div class="panel-heading"><div><span class="step">Alternatif</span><h2>Input manual</h2></div><p>Dipakai bila QR tidak terbaca.</p></div><form id="manualAttendanceForm" class="manual-grid"><input id="manualName" required placeholder="Nama lengkap"><input id="manualNim" required inputmode="numeric" autocomplete="off" placeholder="NIM"><select id="manualProdi" required><option value="">Program studi</option></select><select id="manualSemester" required><option value="">Semester</option></select><button class="button secondary">Catat manual</button></form></section>
+    </section>
+
+    <section class="view" data-view="dashboard">
+      <div class="section-header"><div><span class="eyebrow">Rekap lokal</span><h1>Daftar kehadiran FEB Days 2026.</h1><p>Ekspor sebelum membersihkan browser atau berpindah perangkat.</p></div><button id="refreshDashboardButton" class="button ghost">Muat ulang</button></div>
+      <section id="dashboardGate" class="panel dashboard-gate"><h2>Masukkan PIN panitia</h2><p>Gunakan PIN yang sama dengan scanner.</p><div class="inline-field"><input id="dashboardPin" type="password" inputmode="numeric" placeholder="PIN panitia"><button id="unlockDashboardButton" class="button primary">Buka dashboard</button></div></section>
+      <div id="dashboardContent" class="hidden">
+        <div class="stats-grid"><article class="stat-card"><span>Total hadir</span><strong id="statPresent">0</strong><small>peserta unik</small></article><article class="stat-card"><span>Scan hari ini</span><strong id="statToday">0</strong><small>peserta</small></article><article class="stat-card"><span>Program studi</span><strong id="statPrograms">0</strong><small>terwakili</small></article><article class="stat-card"><span>Penyimpanan</span><strong>Lokal</strong><small>perangkat ini</small></article></div>
+        <section class="panel"><div class="toolbar"><input id="attendanceSearch" type="search" placeholder="Cari nama, NIM, atau prodi..."><div class="toolbar-actions"><button id="exportXlsxButton" class="button primary">Ekspor Excel</button><button id="exportCsvButton" class="button secondary">Ekspor CSV</button><button id="exportBackupButton" class="button ghost">Backup JSON</button><label class="button ghost file-button">Gabungkan backup<input id="importBackupInput" type="file" accept=".json" hidden></label></div></div><div class="table-wrap"><table><thead><tr><th>No.</th><th>Waktu</th><th>Nama</th><th>NIM</th><th>Program studi</th><th>Semester</th><th>Metode</th><th>Aksi</th></tr></thead><tbody id="attendanceTableBody"><tr><td colspan="8">Belum ada data kehadiran.</td></tr></tbody></table></div></section>
+        <section class="panel danger-panel"><div><h2>Kelola data perangkat</h2><p>Buat backup sebelum menghapus.</p></div><button id="clearDataButton" class="button danger">Hapus seluruh data</button></section>
+      </div>
+    </section>
+  </main>
+
+  <nav class="bottom-nav"><a href="#peserta" data-nav="peserta" class="active"><span>✎</span><small>Buat QR</small></a><a href="#kartu" data-nav="kartu"><span>▦</span><small>Kartu</small></a><a href="#scanner" data-nav="scanner"><span>⌗</span><small>Scanner</small></a><a href="#dashboard" data-nav="dashboard"><span>▤</span><small>Rekap</small></a></nav>
+  <div id="toast" class="toast" role="status"></div>
+</body>
+</html>
